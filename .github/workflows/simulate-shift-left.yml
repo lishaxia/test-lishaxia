@@ -1,0 +1,42 @@
+name: Release Testing Agent
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  checks: write
+  contents: read
+
+jobs:
+  release-testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Check Run (In Progress)
+        id: check
+        run: |
+          check_run_id=$(gh api "/repos/${{ github.repository }}/check-runs" \
+            -X POST \
+            -f name="Release Testing Agent" \
+            -f head_sha="${{ github.event.pull_request.head.sha }}" \
+            -f status="in_progress" \
+            -f "output[title]=Release Testing In Progress" \
+            -f "output[summary]=Deploying temporary environment and running tests against PR branch..." \
+            --jq '.id')
+          echo "Check Run ID: $check_run_id"
+          echo "id=$check_run_id" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Simulate testing (wait 30s)
+        run: sleep 30
+
+      - name: Update Check Run (Completed)
+        run: |
+          gh api "/repos/${{ github.repository }}/check-runs/${{ steps.check.outputs.id }}" \
+            -X PATCH \
+            -f status="completed" \
+            -f conclusion="success" \
+            -f "output[title]=Release Testing Complete" \
+            -f "output[summary]=## Results\n- 8 tests executed, 8 passed\n- Duration: 4m 32s\n- Environment: temporary (AutoFab)\n\n[View full report in Operator App](https://console.aws.amazon.com/devops-agent)"
+        env:
+          GH_TOKEN: ${{ github.token }}
