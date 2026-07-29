@@ -33,11 +33,20 @@ jobs:
 
       - name: Update Check Run (Completed)
         run: |
+          SUMMARY=$(cat <<'EOF'
+          ## Results
+          - 8 tests executed, 8 passed
+          - Duration: 4m 32s
+          - Environment: temporary (AutoFab)
+
+          [View full report in Operator App](https://console.aws.amazon.com/devops-agent)
+          EOF
+          )
           gh api "/repos/${{ github.repository }}/check-runs/${{ steps.check.outputs.id }}" \
             -X PATCH \
             -f status="completed" \
             -f conclusion="success" \
             -f "output[title]=Release Testing Complete" \
-            -f "output[summary]=## Results\n- 8 tests executed, 8 passed\n- Duration: 4m 32s\n- Environment: temporary (AutoFab)\n\n[View full report in Operator App](https://console.aws.amazon.com/devops-agent)"
+            -f "output[summary]=$SUMMARY"
         env:
           GH_TOKEN: ${{ github.token }}
