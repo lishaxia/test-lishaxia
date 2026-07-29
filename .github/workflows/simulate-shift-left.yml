@@ -8,7 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  Release Testing Agent:
+  release-testing:
+    name: Release Testing Agent
     runs-on: ubuntu-latest
     steps:
       - name: Create Check Run (In Progress)
